@@ -180,7 +180,7 @@ def detect_language(text: str) -> str:
     
     # Check for Portuguese specific characters/words
     portuguese_chars = re.search(r'[áàâãçéêíóôõú]', text.lower())
-    portuguese_words = re.search(r'\b(que|não|com|para|uma|dos|das|pelo|pela|o|a|os|as|de|da|do)\b', text.lower())
+    portuguese_words = re.search(r'\b(que|não|com|para|uma|dos|das|pelo|pela|o|a|os|as|de|da|do|hoje|ontem|amanhã|muito|bem|sim|também|quando|onde|como|por|mas|seu|sua|mais|menos|anos|ano|tempo|casa|vida|vez|dia|noite|trabalho|coisa|pessoa|mundo|país|cidade|lugar|parte|momento|forma|problema|nome|olhos|mão|mãos|cabeça|lado|cada|mesmo|ainda|depois|antes|agora|aqui|assim|outro|outra|outros|outras|tudo|nada|algo|alguém|todos|todas)\b', text.lower())
     if portuguese_chars or portuguese_words:
         return 'portuguese'
     
@@ -280,6 +280,8 @@ async def translate_text(text: str, source_language: str, target_language: str, 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming messages and translate them."""
+    import re
+    
     user_id = update.effective_user.id
     text = update.message.text.strip()
     
@@ -296,6 +298,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     # Get user's preferred language (default to English)
     user_preferred_language = user_languages.get(user_id, 'english')
+    
+    # Handle special case: if auto-detected language is 'english' but user has set a different target language,
+    # and the word could belong to that language, treat it as the user's target language
+    if (source_language == 'english' and 
+        user_preferred_language != 'english' and 
+        is_single_word(text) and 
+        len(text) > 2):  # Only for single words longer than 2 characters
+        
+        # Try to detect if this could be the user's preferred language
+        # This handles cases like "hoje" (Portuguese) being misdetected as English
+        if user_preferred_language == 'portuguese':
+            # Check if it could be Portuguese by using a more lenient approach
+            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
+                source_language = 'portuguese'
+        elif user_preferred_language == 'spanish':
+            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
+                source_language = 'spanish'
+        elif user_preferred_language == 'french':
+            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
+                source_language = 'french'
+        elif user_preferred_language == 'german':
+            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
+                source_language = 'german'
+        elif user_preferred_language == 'polish':
+            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
+                source_language = 'polish'
     
     # Determine target language
     if source_language == 'russian':
