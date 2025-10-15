@@ -1,12 +1,12 @@
 # Telegram Language Translator Bot
 
-A Telegram bot that translates text between Russian and 5 other languages using OpenAI's API, with explanations for difficult words. Specifically designed for Russian speakers learning foreign languages.
+A Telegram bot that translates text between Russian and 6 other languages using OpenAI's API, with explanations for difficult words. Specifically designed for Russian speakers learning foreign languages.
 
 ## Features
 
 - **Bidirectional translation with explanations**: 
-  - Russian → English/Portuguese/Spanish/French/German (with explanations of difficult words)
-  - English/Portuguese/Spanish/French/German → Russian (with explanations of tricky words)
+  - Russian → English/Portuguese/Spanish/French/German/Polish (with explanations of difficult words)
+  - English/Portuguese/Spanish/French/German/Polish → Russian (with explanations of tricky words)
 - **Smart translation**:
   - Single word → All possible translations with detailed explanations
   - Full text → Complete translation with explanations of difficult words and phrases
@@ -21,6 +21,7 @@ A Telegram bot that translates text between Russian and 5 other languages using 
 - **Spanish** (`spanish`, `es`) 🇪🇸
 - **French** (`french`, `fr`) 🇫🇷
 - **German** (`german`, `de`) 🇩🇪
+- **Polish** (`polish`, `pl`) 🇵🇱
 
 ## Bot Commands
 
@@ -30,6 +31,7 @@ A Telegram bot that translates text between Russian and 5 other languages using 
 - `/lang_es` - Set target language to Spanish 🇪🇸
 - `/lang_fr` - Set target language to French 🇫🇷
 - `/lang_de` - Set target language to German 🇩🇪
+- `/lang_pl` - Set target language to Polish 🇵🇱
 - `/help` - Show help information
 
 ## Installation
@@ -90,9 +92,8 @@ A Telegram bot that translates text between Russian and 5 other languages using 
 
 1. **Set language:**
    ```
-   /lang_en  (English)     /lang_es  (Spanish)
-   /lang_pt  (Portuguese)  /lang_fr  (French)
-   /lang_de  (German)
+   /lang_en  (English)     /lang_es  (Spanish)    /lang_pl  (Polish)
+   /lang_pt  (Portuguese)  /lang_fr  (French)     /lang_de  (German)
    ```
 
 2. **Translate Russian text with explanations:**
@@ -140,6 +141,18 @@ A Telegram bot that translates text between Russian and 5 other languages using 
    
    Explanation of words and phrases in translation:
    - ¿cómo están tus cosas?: неформальный способ спросить "как дела?"
+   ```
+
+6. **Polish to Russian with explanations:**
+   ```
+   User: Dzień dobry, jak się Pan ma?
+   Bot: 🇵🇱 Polish → 🇷🇺 Russian
+   ──────────────────────────────
+   Перевод: Добрый день, как дела?
+   
+   Объяснение слов и фраз:
+   - Dzień dobry: стандартное вежливое приветствие "добрый день"
+   - jak się Pan ma: вежливая форма вопроса "как дела?" к мужчине
    ```
 
 ## Project Structure

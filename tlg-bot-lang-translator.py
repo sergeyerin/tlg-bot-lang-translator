@@ -36,6 +36,8 @@ LANGUAGES = {
     'fr': 'French',
     'german': 'German',
     'de': 'German',
+    'polish': 'Polish',
+    'pl': 'Polish',
     'russian': 'Russian',
     'ru': 'Russian'
 }
@@ -55,13 +57,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 /start - начать работу с ботом
 /lang_en - английский 🇺🇸  /lang_pt - португальский 🇵🇹
 /lang_es - испанский 🇪🇸     /lang_fr - французский 🇫🇷
-/lang_de - немецкий 🇩🇪      /help - помощь
+/lang_de - немецкий 🇩🇪      /lang_pl - польский 🇵🇱
+/help - помощь
 
 Просто отправьте текст, и я переведу его!
 
 Особенности:
-• Русский → 5 языков (с объяснениями сложных слов)
-• 5 языков → Русский (с объяснениями)
+• Русский → 6 языков (с объяснениями сложных слов)
+• 6 языков → Русский (с объяснениями)
 • Для одного слова — все варианты перевода с объяснениями
 """
     await update.message.reply_text(welcome_message)
@@ -76,7 +79,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 🌍 Доступные языки:
 /lang_en - английский 🇺🇸      /lang_es - испанский 🇪🇸
 /lang_pt - португальский 🇵🇹  /lang_fr - французский 🇫🇷
-/lang_de - немецкий 🇩🇪
+/lang_de - немецкий 🇩🇪        /lang_pl - польский 🇵🇱
 
 🔄 Как работает перевод:
 • Русский текст → перевод на выбранный язык + объяснения
@@ -125,6 +128,14 @@ async def set_language_german(update: Update, context: ContextTypes.DEFAULT_TYPE
         "✅ Язык перевода установлен: Немецкий 🇩🇪"
     )
 
+async def set_language_polish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Set target language to Polish."""
+    user_id = update.effective_user.id
+    user_languages[user_id] = 'polish'
+    await update.message.reply_text(
+        "✅ Язык перевода установлен: Польский 🇵🇱"
+    )
+
 def is_single_word(text: str) -> bool:
     """Check if the text is a single word."""
     return len(text.split()) == 1
@@ -161,6 +172,12 @@ def detect_language(text: str) -> str:
     if spanish_chars or spanish_words:
         return 'spanish'
     
+    # Check for Polish specific characters and words
+    polish_chars = re.search(r'[ąćęłńóśźż]', text.lower())
+    polish_words = re.search(r'\b(i|w|na|z|do|od|dla|o|po|przy|przez|bez|pod|nad|za|przed|między|jeżeli|że)\b', text.lower())
+    if polish_chars or polish_words:
+        return 'polish'
+    
     # Check for Portuguese specific characters/words
     portuguese_chars = re.search(r'[áàâãçéêíóôõú]', text.lower())
     portuguese_words = re.search(r'\b(que|não|com|para|uma|dos|das|pelo|pela|o|a|os|as|de|da|do)\b', text.lower())
@@ -182,7 +199,8 @@ def get_language_flag(language: str) -> str:
         'portuguese': '🇵🇹',
         'spanish': '🇪🇸',
         'french': '🇫🇷',
-        'german': '🇩🇪'
+        'german': '🇩🇪',
+        'polish': '🇵🇱'
     }
     return flags.get(language, '🏳️')
 
@@ -272,7 +290,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if source_language == 'unknown':
         await update.message.reply_text(
             "❌ Не могу определить язык текста.\n"
-            "Поддерживаемые языки: русский, английский, португальский, испанский, французский, немецкий"
+            "Поддерживаемые языки: русский, английский, португальский, испанский, французский, немецкий, польский"
         )
         return
     
@@ -324,6 +342,7 @@ def main() -> None:
     application.add_handler(CommandHandler("lang_es", set_language_spanish))
     application.add_handler(CommandHandler("lang_fr", set_language_french))
     application.add_handler(CommandHandler("lang_de", set_language_german))
+    application.add_handler(CommandHandler("lang_pl", set_language_polish))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     # Start the bot
