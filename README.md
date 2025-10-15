@@ -91,7 +91,9 @@ A Telegram bot that translates text between Russian and other languages using Op
 2. **Translate Russian text with explanations:**
    ```
    User: Привет, как дела?
-   Bot: Translation: Hello, how are you?
+   Bot: 🇷🇺 Russian → 🇺🇸 English
+   ──────────────────────────────
+   Translation: Hello, how are you?
    
    Explanation of words and phrases in translation:
    - how are you: выражение вежливости, используется при встрече
@@ -100,7 +102,9 @@ A Telegram bot that translates text between Russian and other languages using Op
 3. **Single Russian word with explanations:**
    ```
    User: банк
-   Bot: Word: банк
+   Bot: 🇷🇺 Russian → 🇺🇸 English
+   ──────────────────────────────
+   Word: банк
    Translations:
    1. bank - финансовая организация, также может означать "берег реки"
    2. jar - стеклянная емкость с крышкой, для консервации
@@ -110,7 +114,9 @@ A Telegram bot that translates text between Russian and other languages using Op
 4. **English to Russian with explanations:**
    ```
    User: The serendipitous encounter changed everything
-   Bot: Перевод: Случайная встреча изменила все
+   Bot: 🇺🇸 English → 🇷🇺 Russian
+   ──────────────────────────────
+   Перевод: Случайная встреча изменила все
    
    Объяснение сложных слов:
    - serendipitous: означает "случайный, но приятный и полезный"

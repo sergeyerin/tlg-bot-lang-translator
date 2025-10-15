@@ -128,6 +128,24 @@ def detect_language(text: str) -> str:
     # Unknown language
     return 'unknown'
 
+def get_language_flag(language: str) -> str:
+    """Get flag emoji for a language."""
+    flags = {
+        'russian': '🇷🇺',
+        'english': '🇺🇸', 
+        'portuguese': '🇵🇹'
+    }
+    return flags.get(language, '🏳️')
+
+def get_translation_header(source_language: str, target_language: str) -> str:
+    """Get translation direction header with flags."""
+    source_flag = get_language_flag(source_language)
+    target_flag = get_language_flag(target_language)
+    source_name = LANGUAGES.get(source_language, source_language).title()
+    target_name = LANGUAGES.get(target_language, target_language).title()
+    
+    return f"{source_flag} {source_name} → {target_flag} {target_name}\n{'─' * 30}\n"
+
 async def translate_text(text: str, source_language: str, target_language: str, is_single: bool = False) -> str:
     """Translate text using OpenAI with explanations for difficult words and phrases."""
     try:
@@ -226,11 +244,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # Show typing indicator
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action='typing')
     
+    # Get translation direction header
+    translation_header = get_translation_header(source_language, target_language)
+    
     # Translate the text
     translation = await translate_text(text, source_language, target_language, is_single)
     
+    # Combine header with translation
+    full_response = translation_header + translation
+    
     # Send the translation
-    await update.message.reply_text(translation)
+    await update.message.reply_text(full_response)
 
 def main() -> None:
     """Start the bot."""
