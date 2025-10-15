@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Telegram Translation Bot using OpenAI
-Translates text from Russian to other languages only.
+Translates text between Russian and other languages with explanations for non-native text.
 """
 
 import os
@@ -50,12 +50,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 /lang <язык> - установить язык перевода (english, portuguese)
 /help - показать помощь
 
-Просто отправьте русский текст, и я переведу его на выбранный язык!
+Просто отправьте текст, и я переведу его!
 
 Особенности:
-• Переводит ТОЛЬКО с русского на другие языки
-• По умолчанию перевожу на английский
-• Для одного слова показываю все возможные переводы
+• Русский → Английский/Португальский
+• Английский/Португальский → Русский (с объяснениями)
+• Для одного слова — все варианты перевода
 """
     await update.message.reply_text(welcome_message)
 
@@ -65,14 +65,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 📜 Помощь по командам:
 
 /start - запустить бота
-/lang <язык> - установить целевой язык перевода
+/lang <язык> - установить язык для перевода с русского
   Доступные языки: english (en), portuguese (pt)
 /help - показать эту помощь
 
 🔄 Как работает перевод:
-• Отправьте русский текст - получите перевод
-• Одно слово - все возможные переводы
-• Бот переводит только с русского
+• Русский текст → перевод на выбранный язык
+• Английский/Португальский → русский + объяснения
+• Одно слово → все возможные переводы
 
 Примеры:
 /lang english
@@ -114,11 +114,58 @@ def is_russian_text(text: str) -> bool:
     # Check if text contains Cyrillic characters
     return bool(re.search(r'[а-яё]', text.lower()))
 
-async def translate_text(text: str, target_language: str, is_single: bool = False) -> str:
-    """Translate text from Russian using OpenAI."""
+def detect_language(text: str) -> str:
+    """Detect the language of the input text."""
+    import re
+    
+    # Check for Russian (Cyrillic characters)
+    if re.search(r'[а-яё]', text.lower()):
+        return 'russian'
+    
+    # Check for Portuguese specific characters/words
+    portuguese_chars = re.search(r'[áàâãçéêíóôõú]', text.lower())
+    portuguese_words = re.search(r'\b(que|não|com|para|uma|dos|das|pelo|pela)\b', text.lower())
+    if portuguese_chars or portuguese_words:
+        return 'portuguese'
+    
+    # Default to English for Latin characters
+    if re.search(r'[a-z]', text.lower()):
+        return 'english'
+    
+    # Unknown language
+    return 'unknown'
+
+async def translate_text(text: str, source_language: str, target_language: str, is_single: bool = False) -> str:
+    """Translate text using OpenAI with explanations for non-Russian input."""
     try:
-        if is_single:
-            prompt = f"""
+        # If translating TO Russian (non-native input), provide explanations
+        if target_language == 'russian':
+            if is_single:
+                prompt = f"""
+Переведи слово "{text}" ({source_language}) на русский язык. Дай ВСЕ возможные переводы с объяснениями.
+Формат ответа:
+Слово: {text}
+Переводы:
+1. [перевод] - [объяснение/контекст]
+2. [перевод] - [объяснение/контекст]
+...
+"""
+            else:
+                prompt = f"""
+Переведи следующий текст с {source_language} на русский язык и объясни значение сложных или неочевидных слов:
+
+Текст: "{text}"
+
+Формат ответа:
+Перевод: [перевод текста]
+
+Объяснение сложных слов:
+- [слово]: [объяснение]
+"""
+        # If translating FROM Russian (no explanations needed)
+        else:
+            if is_single:
+                prompt = f"""
 Translate the Russian word "{text}" to {LANGUAGES[target_language]}. Provide ALL possible translations of this word.
 Format:
 Word: {text}
@@ -128,8 +175,8 @@ Translations:
 3. [translation]
 ...
 """
-        else:
-            prompt = f'Translate the following Russian text to {LANGUAGES[target_language]}: "{text}"'
+            else:
+                prompt = f'Translate the following Russian text to {LANGUAGES[target_language]}: "{text}"'
         
         response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -149,16 +196,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_id = update.effective_user.id
     text = update.message.text.strip()
     
-    # Check if text is in Russian
-    if not is_russian_text(text):
+    # Detect the language of input text
+    source_language = detect_language(text)
+    
+    # Check if language is supported
+    if source_language == 'unknown':
         await update.message.reply_text(
-            "❌ Я перевожу только с русского языка!\n"
-            "Пожалуйста, отправьте текст на русском языке."
+            "❌ Не могу определить язык текста.\n"
+            "Поддерживаемые языки: русский, английский, португальский"
         )
         return
     
     # Get user's preferred language (default to English)
-    target_language = user_languages.get(user_id, 'english')
+    user_preferred_language = user_languages.get(user_id, 'english')
+    
+    # Determine target language
+    if source_language == 'russian':
+        # Russian to other language
+        target_language = user_preferred_language
+    else:
+        # Other language to Russian (native language with explanations)
+        target_language = 'russian'
     
     # Check if it's a single word
     is_single = is_single_word(text)
@@ -167,7 +225,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action='typing')
     
     # Translate the text
-    translation = await translate_text(text, target_language, is_single)
+    translation = await translate_text(text, source_language, target_language, is_single)
     
     # Send the translation
     await update.message.reply_text(translation)

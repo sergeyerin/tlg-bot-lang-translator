@@ -1,16 +1,18 @@
 # Telegram Language Translator Bot
 
-A Telegram bot that translates text FROM Russian to other languages using OpenAI's API, specifically designed for Russian speakers learning other languages.
+A Telegram bot that translates text between Russian and other languages using OpenAI's API, with explanations for non-Russian input. Specifically designed for Russian speakers learning other languages.
 
 ## Features
 
-- **Multi-language support**: Currently supports English and Portuguese translations
+- **Bidirectional translation**: 
+  - Russian → English/Portuguese
+  - English/Portuguese → Russian (with explanations of tricky words)
 - **Smart translation**:
-  - Single word → All possible translations
+  - Single word → All possible translations with context
   - Full text → Complete translation
-  - **Russian-only input**: Bot only accepts and translates Russian text
-- **User preferences**: Each user can set their preferred target language
-- **Russian-focused**: Designed specifically for Russian speakers
+  - **Non-Russian input**: Provides explanations of difficult words when translating to Russian
+- **User preferences**: Each user can set their preferred target language for Russian text
+- **Russian-focused**: Designed specifically for Russian speakers learning other languages
 
 ## Supported Languages
 
@@ -102,11 +104,14 @@ A Telegram bot that translates text FROM Russian to other languages using OpenAI
    ...
    ```
 
-4. **Non-Russian text rejection:**
+4. **English to Russian with explanations:**
    ```
-   User: Hello world
-   Bot: ❌ Я перевожу только с русского языка!
-   Пожалуйста, отправьте текст на русском языке.
+   User: The serendipitous encounter changed everything
+   Bot: Перевод: Случайная встреча изменила все
+   
+   Объяснение сложных слов:
+   - serendipitous: означает "случайный, но приятный и полезный"
+   - encounter: встреча, столкновение
    ```
 
 ## Project Structure
