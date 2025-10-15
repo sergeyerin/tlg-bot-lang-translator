@@ -22,8 +22,8 @@ A Telegram bot that translates text between Russian and other languages using Op
 ## Bot Commands
 
 - `/start` - Initialize the bot and get welcome message
-- `/lang <language>` - Set target translation language
-  - Examples: `/lang english`, `/lang pt`
+- `/lang_en` - Set target language to English for Russian text translation 🇺🇸
+- `/lang_pt` - Set target language to Portuguese for Russian text translation 🇵🇹
 - `/help` - Show help information
 
 ## Installation
@@ -84,7 +84,8 @@ A Telegram bot that translates text between Russian and other languages using Op
 
 1. **Set language:**
    ```
-   /lang english
+   /lang_en  (for English)
+   /lang_pt  (for Portuguese)
    ```
 
 2. **Translate text:**

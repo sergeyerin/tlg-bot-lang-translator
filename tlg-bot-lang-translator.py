@@ -47,7 +47,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 Команды:
 /start - начать работу с ботом
-/lang <язык> - установить язык перевода (english, portuguese)
+/lang_en - переводить русский на английский 🇺🇸
+/lang_pt - переводить русский на португальский 🇵🇹
 /help - показать помощь
 
 Просто отправьте текст, и я переведу его!
@@ -65,8 +66,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 📜 Помощь по командам:
 
 /start - запустить бота
-/lang <язык> - установить язык для перевода с русского
-  Доступные языки: english (en), portuguese (pt)
+/lang_en - переводить русский на английский 🇺🇸
+/lang_pt - переводить русский на португальский 🇵🇹
 /help - показать эту помощь
 
 🔄 Как работает перевод:
@@ -75,34 +76,26 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 • Одно слово → все возможные переводы
 
 Примеры:
-/lang english
-/lang pt
+/lang_en - для перевода на английский
+/lang_pt - для перевода на португальский
 """
     await update.message.reply_text(help_text)
 
-async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Set the target language for translation."""
+async def set_language_english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Set target language to English."""
     user_id = update.effective_user.id
-    
-    if not context.args:
-        await update.message.reply_text(
-            "Укажите язык! Используйте: /lang <язык>\n"
-            "Доступные языки: english (en), portuguese (pt)"
-        )
-        return
-    
-    language = context.args[0].lower()
-    
-    if language in LANGUAGES and language not in ['russian', 'ru']:
-        user_languages[user_id] = language
-        await update.message.reply_text(
-            f"✅ Язык перевода установлен: {LANGUAGES[language]}"
-        )
-    else:
-        await update.message.reply_text(
-            "❌ Неподдерживаемый язык!\n"
-            "Доступные языки: english (en), portuguese (pt)"
-        )
+    user_languages[user_id] = 'english'
+    await update.message.reply_text(
+        "✅ Язык перевода установлен: Английский 🇺🇸"
+    )
+
+async def set_language_portuguese(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Set target language to Portuguese."""
+    user_id = update.effective_user.id
+    user_languages[user_id] = 'portuguese'
+    await update.message.reply_text(
+        "✅ Язык перевода установлен: Португальский 🇵🇹"
+    )
 
 def is_single_word(text: str) -> bool:
     """Check if the text is a single word."""
@@ -244,7 +237,8 @@ def main() -> None:
     # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("lang", set_language))
+    application.add_handler(CommandHandler("lang_en", set_language_english))
+    application.add_handler(CommandHandler("lang_pt", set_language_portuguese))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     # Start the bot
