@@ -1,12 +1,12 @@
 # Telegram Language Translator Bot
 
-A Telegram bot that translates text between Russian and other languages using OpenAI's API, with explanations for non-Russian input. Specifically designed for Russian speakers learning other languages.
+A Telegram bot that translates text between Russian and 5 other languages using OpenAI's API, with explanations for difficult words. Specifically designed for Russian speakers learning foreign languages.
 
 ## Features
 
 - **Bidirectional translation with explanations**: 
-  - Russian → English/Portuguese (with explanations of difficult words in the target language)
-  - English/Portuguese → Russian (with explanations of tricky words)
+  - Russian → English/Portuguese/Spanish/French/German (with explanations of difficult words)
+  - English/Portuguese/Spanish/French/German → Russian (with explanations of tricky words)
 - **Smart translation**:
   - Single word → All possible translations with detailed explanations
   - Full text → Complete translation with explanations of difficult words and phrases
@@ -16,14 +16,20 @@ A Telegram bot that translates text between Russian and other languages using Op
 
 ## Supported Languages
 
-- **English** (`english`, `en`) - Default
-- **Portuguese** (`portuguese`, `pt`)
+- **English** (`english`, `en`) - Default 🇺🇸
+- **Portuguese** (`portuguese`, `pt`) 🇵🇹 
+- **Spanish** (`spanish`, `es`) 🇪🇸
+- **French** (`french`, `fr`) 🇫🇷
+- **German** (`german`, `de`) 🇩🇪
 
 ## Bot Commands
 
 - `/start` - Initialize the bot and get welcome message
-- `/lang_en` - Set target language to English for Russian text translation 🇺🇸
-- `/lang_pt` - Set target language to Portuguese for Russian text translation 🇵🇹
+- `/lang_en` - Set target language to English 🇺🇸
+- `/lang_pt` - Set target language to Portuguese 🇵🇹
+- `/lang_es` - Set target language to Spanish 🇪🇸
+- `/lang_fr` - Set target language to French 🇫🇷
+- `/lang_de` - Set target language to German 🇩🇪
 - `/help` - Show help information
 
 ## Installation
@@ -84,8 +90,9 @@ A Telegram bot that translates text between Russian and other languages using Op
 
 1. **Set language:**
    ```
-   /lang_en  (for English)
-   /lang_pt  (for Portuguese)
+   /lang_en  (English)     /lang_es  (Spanish)
+   /lang_pt  (Portuguese)  /lang_fr  (French)
+   /lang_de  (German)
    ```
 
 2. **Translate Russian text with explanations:**
@@ -121,6 +128,18 @@ A Telegram bot that translates text between Russian and other languages using Op
    Объяснение сложных слов:
    - serendipitous: означает "случайный, но приятный и полезный"
    - encounter: встреча, столкновение
+   ```
+
+5. **Russian to Spanish with explanations:**
+   ```
+   /lang_es
+   User: Привет, как твои дела?
+   Bot: 🇷🇺 Russian → 🇪🇸 Spanish
+   ──────────────────────────────
+   Translation: Hola, ¿cómo están tus cosas?
+   
+   Explanation of words and phrases in translation:
+   - ¿cómo están tus cosas?: неформальный способ спросить "как дела?"
    ```
 
 ## Project Structure
