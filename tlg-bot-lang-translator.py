@@ -146,51 +146,6 @@ def is_russian_text(text: str) -> bool:
     # Check if text contains Cyrillic characters
     return bool(re.search(r'[а-яё]', text.lower()))
 
-def detect_language(text: str) -> str:
-    """Detect the language of the input text."""
-    import re
-    
-    # Check for Russian (Cyrillic characters)
-    if re.search(r'[а-яё]', text.lower()):
-        return 'russian'
-    
-    # Check for German specific characters and words
-    german_chars = re.search(r'[äöüß]', text.lower())
-    german_words = re.search(r'\b(der|die|das|und|ist|ein|eine|mit|von|zu|auf|für|sich)\b', text.lower())
-    if german_chars or german_words:
-        return 'german'
-    
-    # Check for French specific characters and words
-    french_chars = re.search(r'[àâäçéèêëîïôùûüÿ]', text.lower())
-    french_words = re.search(r'\b(le|la|les|de|du|des|et|est|un|une|ce|qui|que|avec|pour|dans)\b', text.lower())
-    if french_chars or french_words:
-        return 'french'
-    
-    # Check for Spanish specific characters and words
-    spanish_chars = re.search(r'[áéíóúüñ]', text.lower())
-    spanish_words = re.search(r'\b(el|la|los|las|de|del|y|es|un|una|con|por|para|en|que|se|no)\b', text.lower())
-    if spanish_chars or spanish_words:
-        return 'spanish'
-    
-    # Check for Polish specific characters and words
-    polish_chars = re.search(r'[ąćęłńóśźż]', text.lower())
-    polish_words = re.search(r'\b(i|w|na|z|do|od|dla|o|po|przy|przez|bez|pod|nad|za|przed|między|jeżeli|że)\b', text.lower())
-    if polish_chars or polish_words:
-        return 'polish'
-    
-    # Check for Portuguese specific characters/words
-    portuguese_chars = re.search(r'[áàâãçéêíóôõú]', text.lower())
-    portuguese_words = re.search(r'\b(que|não|com|para|uma|dos|das|pelo|pela|o|a|os|as|de|da|do|hoje|ontem|amanhã|muito|bem|sim|também|quando|onde|como|por|mas|seu|sua|mais|menos|anos|ano|tempo|casa|vida|vez|dia|noite|trabalho|coisa|pessoa|mundo|país|cidade|lugar|parte|momento|forma|problema|nome|olhos|mão|mãos|cabeça|lado|cada|mesmo|ainda|depois|antes|agora|aqui|assim|outro|outra|outros|outras|tudo|nada|algo|alguém|todos|todas)\b', text.lower())
-    if portuguese_chars or portuguese_words:
-        return 'portuguese'
-    
-    # Default to English for Latin characters
-    if re.search(r'[a-z]', text.lower()):
-        return 'english'
-    
-    # Unknown language
-    return 'unknown'
-
 def get_language_flag(language: str) -> str:
     """Get flag emoji for a language."""
     flags = {
@@ -280,57 +235,20 @@ async def translate_text(text: str, source_language: str, target_language: str, 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming messages and translate them."""
-    import re
-    
     user_id = update.effective_user.id
     text = update.message.text.strip()
-    
-    # Detect the language of input text
-    source_language = detect_language(text)
-    
-    # Check if language is supported
-    if source_language == 'unknown':
-        await update.message.reply_text(
-            "❌ Не могу определить язык текста.\n"
-            "Поддерживаемые языки: русский, английский, португальский, испанский, французский, немецкий, польский"
-        )
-        return
     
     # Get user's preferred language (default to English)
     user_preferred_language = user_languages.get(user_id, 'english')
     
-    # Handle special case: if auto-detected language is 'english' but user has set a different target language,
-    # and the word could belong to that language, treat it as the user's target language
-    if (source_language == 'english' and 
-        user_preferred_language != 'english' and 
-        is_single_word(text) and 
-        len(text) > 2):  # Only for single words longer than 2 characters
-        
-        # Try to detect if this could be the user's preferred language
-        # This handles cases like "hoje" (Portuguese) being misdetected as English
-        if user_preferred_language == 'portuguese':
-            # Check if it could be Portuguese by using a more lenient approach
-            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
-                source_language = 'portuguese'
-        elif user_preferred_language == 'spanish':
-            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
-                source_language = 'spanish'
-        elif user_preferred_language == 'french':
-            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
-                source_language = 'french'
-        elif user_preferred_language == 'german':
-            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
-                source_language = 'german'
-        elif user_preferred_language == 'polish':
-            if not re.search(r'\b(the|and|or|but|in|on|at|to|for|of|with|by|from|about|into|through|during|before|after|above|below|between|among|against|upon|within|without|toward|inside|outside|behind|beside|beyond|beneath|across)\b', text.lower()):
-                source_language = 'polish'
-    
-    # Determine target language
-    if source_language == 'russian':
-        # Russian to other language
+    # Simple logic: Russian text detected by Cyrillic characters, everything else is user's target language
+    if is_russian_text(text):
+        # Russian to user's target language
+        source_language = 'russian'
         target_language = user_preferred_language
     else:
-        # Other language to Russian (native language with explanations)
+        # User's target language to Russian
+        source_language = user_preferred_language  
         target_language = 'russian'
     
     # Check if it's a single word
