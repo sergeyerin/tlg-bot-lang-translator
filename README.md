@@ -4,13 +4,13 @@ A Telegram bot that translates text between Russian and other languages using Op
 
 ## Features
 
-- **Bidirectional translation**: 
-  - Russian → English/Portuguese
+- **Bidirectional translation with explanations**: 
+  - Russian → English/Portuguese (with explanations of difficult words in the target language)
   - English/Portuguese → Russian (with explanations of tricky words)
 - **Smart translation**:
-  - Single word → All possible translations with context
-  - Full text → Complete translation
-  - **Non-Russian input**: Provides explanations of difficult words when translating to Russian
+  - Single word → All possible translations with detailed explanations
+  - Full text → Complete translation with explanations of difficult words and phrases
+  - **Always explains**: Provides explanations for difficult vocabulary in both directions
 - **User preferences**: Each user can set their preferred target language for Russian text
 - **Russian-focused**: Designed specifically for Russian speakers learning other languages
 
@@ -88,21 +88,23 @@ A Telegram bot that translates text between Russian and other languages using Op
    /lang_pt  (for Portuguese)
    ```
 
-2. **Translate text:**
+2. **Translate Russian text with explanations:**
    ```
    User: Привет, как дела?
-   Bot: Hello, how are you?
+   Bot: Translation: Hello, how are you?
+   
+   Explanation of words and phrases in translation:
+   - how are you: выражение вежливости, используется при встрече
    ```
 
-3. **Single Russian word with multiple meanings:**
+3. **Single Russian word with explanations:**
    ```
    User: банк
    Bot: Word: банк
    Translations:
-   1. bank
-   2. jar
-   3. can
-   ...
+   1. bank - финансовая организация, также может означать "берег реки"
+   2. jar - стеклянная емкость с крышкой, для консервации
+   3. can - металлическая банка, обычно для напитков
    ```
 
 4. **English to Russian with explanations:**

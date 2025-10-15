@@ -54,9 +54,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 Просто отправьте текст, и я переведу его!
 
 Особенности:
-• Русский → Английский/Португальский
+• Русский → Английский/Португальский (с объяснениями сложных слов)
 • Английский/Португальский → Русский (с объяснениями)
-• Для одного слова — все варианты перевода
+• Для одного слова — все варианты перевода с объяснениями
 """
     await update.message.reply_text(welcome_message)
 
@@ -71,9 +71,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 /help - показать эту помощь
 
 🔄 Как работает перевод:
-• Русский текст → перевод на выбранный язык
+• Русский текст → перевод на выбранный язык + объяснения
 • Английский/Португальский → русский + объяснения
-• Одно слово → все возможные переводы
+• Одно слово → все возможные переводы + объяснения
 
 Примеры:
 /lang_en - для перевода на английский
@@ -129,9 +129,9 @@ def detect_language(text: str) -> str:
     return 'unknown'
 
 async def translate_text(text: str, source_language: str, target_language: str, is_single: bool = False) -> str:
-    """Translate text using OpenAI with explanations for non-Russian input."""
+    """Translate text using OpenAI with explanations for difficult words and phrases."""
     try:
-        # If translating TO Russian (non-native input), provide explanations
+        # If translating TO Russian, provide explanations in Russian
         if target_language == 'russian':
             if is_single:
                 prompt = f"""
@@ -145,31 +145,40 @@ async def translate_text(text: str, source_language: str, target_language: str, 
 """
             else:
                 prompt = f"""
-Переведи следующий текст с {source_language} на русский язык и объясни значение сложных или неочевидных слов:
+Переведи следующий текст с {source_language} на русский язык и объясни значение всех сложных слов и фраз:
 
 Текст: "{text}"
 
 Формат ответа:
 Перевод: [перевод текста]
 
-Объяснение сложных слов:
-- [слово]: [объяснение]
+Объяснение слов и фраз:
+- [слово/фраза]: [подробное объяснение]
 """
-        # If translating FROM Russian (no explanations needed)
+        # If translating FROM Russian, provide explanations in Russian about target language words/phrases
         else:
             if is_single:
                 prompt = f"""
-Translate the Russian word "{text}" to {LANGUAGES[target_language]}. Provide ALL possible translations of this word.
-Format:
-Word: {text}
-Translations:
-1. [translation]
-2. [translation]
-3. [translation]
+Переведи русское слово "{text}" на {LANGUAGES[target_language]} и дай ВСЕ возможные переводы с объяснениями.
+Формат ответа:
+Слово: {text}
+Переводы:
+1. [translation] - [объяснение на русском: когда и как используется]
+2. [translation] - [объяснение на русском: контекст и нюансы]
 ...
 """
             else:
-                prompt = f'Translate the following Russian text to {LANGUAGES[target_language]}: "{text}"'
+                prompt = f"""
+Переведи следующий русский текст на {LANGUAGES[target_language]} и объясни все слова и фразы в переводе, которые могут быть сложными для изучающего язык:
+
+Текст: "{text}"
+
+Формат ответа:
+Перевод: [translation]
+
+Объяснение слов и фраз в переводе:
+- [word/phrase]: [подробное объяснение на русском: значение, контекст, примеры]
+"""
         
         response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
