@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Telegram Translation Bot using OpenAI
-Translates text from Russian to other languages and vice versa.
+Translates text from Russian to other languages only.
 """
 
 import os
@@ -50,11 +50,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 /lang <язык> - установить язык перевода (english, portuguese)
 /help - показать помощь
 
-Просто отправьте текст, и я переведу его на выбранный язык!
+Просто отправьте русский текст, и я переведу его на выбранный язык!
 
 Особенности:
+• Переводит ТОЛЬКО с русского на другие языки
 • По умолчанию перевожу на английский
-• При переводе на русский добавляю объяснения сложных слов
 • Для одного слова показываю все возможные переводы
 """
     await update.message.reply_text(welcome_message)
@@ -62,7 +62,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
     help_text = """
-📖 Помощь по командам:
+📜 Помощь по командам:
 
 /start - запустить бота
 /lang <язык> - установить целевой язык перевода
@@ -70,9 +70,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 /help - показать эту помощь
 
 🔄 Как работает перевод:
-• Отправьте текст - получите перевод
+• Отправьте русский текст - получите перевод
 • Одно слово - все возможные переводы
-• Перевод на русский - с объяснением сложных слов
+• Бот переводит только с русского
 
 Примеры:
 /lang english
@@ -108,45 +108,28 @@ def is_single_word(text: str) -> bool:
     """Check if the text is a single word."""
     return len(text.split()) == 1
 
-async def translate_text(text: str, target_language: str, is_to_russian: bool = False, is_single: bool = False) -> str:
-    """Translate text using OpenAI."""
+def is_russian_text(text: str) -> bool:
+    """Check if the text contains Russian characters."""
+    import re
+    # Check if text contains Cyrillic characters
+    return bool(re.search(r'[а-яё]', text.lower()))
+
+async def translate_text(text: str, target_language: str, is_single: bool = False) -> str:
+    """Translate text from Russian using OpenAI."""
     try:
         if is_single:
-            if is_to_russian:
-                prompt = f"""
-Переведи слово "{text}" на русский язык. Дай ВСЕ возможные переводы этого слова с объяснениями и примерами использования.
-Формат ответа:
-Слово: {text}
-Переводы:
-1. [перевод] - [объяснение/контекст]
-2. [перевод] - [объяснение/контекст]
-...
-"""
-            else:
-                prompt = f"""
-Translate the word "{text}" to {LANGUAGES[target_language]}. Provide ALL possible translations of this word with explanations and usage contexts.
+            prompt = f"""
+Translate the Russian word "{text}" to {LANGUAGES[target_language]}. Provide ALL possible translations of this word.
 Format:
 Word: {text}
 Translations:
-1. [translation] - [explanation/context]
-2. [translation] - [explanation/context]
+1. [translation]
+2. [translation]
+3. [translation]
 ...
 """
         else:
-            if is_to_russian:
-                prompt = f"""
-Переведи следующий текст на русский язык и объясни значение всех сложных или неочевидных слов:
-
-Текст: "{text}"
-
-Формат ответа:
-Перевод: [перевод текста]
-
-Объяснение сложных слов:
-- [слово]: [объяснение]
-"""
-            else:
-                prompt = f'Translate the following text from Russian to {LANGUAGES[target_language]}: "{text}"'
+            prompt = f'Translate the following Russian text to {LANGUAGES[target_language]}: "{text}"'
         
         response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -166,20 +149,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_id = update.effective_user.id
     text = update.message.text.strip()
     
+    # Check if text is in Russian
+    if not is_russian_text(text):
+        await update.message.reply_text(
+            "❌ Я перевожу только с русского языка!\n"
+            "Пожалуйста, отправьте текст на русском языке."
+        )
+        return
+    
     # Get user's preferred language (default to English)
     target_language = user_languages.get(user_id, 'english')
     
     # Check if it's a single word
     is_single = is_single_word(text)
     
-    # Check if user wants translation to Russian (native language)
-    is_to_russian = target_language in ['russian', 'ru']
-    
     # Show typing indicator
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action='typing')
     
     # Translate the text
-    translation = await translate_text(text, target_language, is_to_russian, is_single)
+    translation = await translate_text(text, target_language, is_single)
     
     # Send the translation
     await update.message.reply_text(translation)
