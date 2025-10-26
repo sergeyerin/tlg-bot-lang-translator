@@ -6,10 +6,11 @@ Translates text between Russian and other languages with explanations for non-na
 
 import os
 import logging
+import time
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from openai import OpenAI
+from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
 # Load environment variables
 load_dotenv()
@@ -220,18 +221,75 @@ async def translate_text(text: str, source_language: str, target_language: str, 
 - [word/phrase]: [подробное объяснение на русском: значение, контекст, примеры]
 """
         
-        response = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=1000,
-            temperature=0.3
-        )
+        # Retry logic with exponential backoff
+        max_retries = 3
+        base_delay = 1
         
-        return response.choices[0].message.content.strip()
+        for attempt in range(max_retries):
+            try:
+                response = openai_client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=1000,
+                    temperature=0.3
+                )
+                
+                return response.choices[0].message.content.strip()
+            
+            except RateLimitError as e:
+                # Check if it's a quota issue or rate limit
+                error_message = str(e)
+                if 'insufficient_quota' in error_message or 'quota' in error_message.lower():
+                    logger.error(f"OpenAI quota exceeded: {e}")
+                    return """❌ Ошибка: превышен лимит OpenAI API
+
+Сервис перевода временно недоступен из-за исчерпания квоты OpenAI API.
+
+Пожалуйста, свяжитесь с администратором бота или попробуйте позже."""
+                
+                # Rate limit - retry with backoff
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    logger.warning(f"Rate limit hit, retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"Rate limit exceeded after {max_retries} attempts: {e}")
+                    return """❌ Ошибка: превышен лимит запросов
+
+OpenAI API временно недоступен из-за большого количества запросов.
+
+Пожалуйста, попробуйте через несколько минут."""
+            
+            except APIConnectionError as e:
+                logger.error(f"API connection error: {e}")
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    logger.warning(f"Connection error, retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(delay)
+                else:
+                    return """❌ Ошибка подключения к OpenAI API
+
+Не удалось подключиться к сервису перевода.
+
+Пожалуйста, проверьте интернет-соединение или попробуйте позже."""
+            
+            except APIError as e:
+                logger.error(f"OpenAI API error: {e}")
+                return f"""❌ Ошибка API OpenAI
+
+Произошла ошибка при обработке запроса.
+
+Детали: {str(e)[:100]}
+
+Попробуйте позже или свяжитесь с администратором."""
     
     except Exception as e:
-        logger.error(f"Translation error: {e}")
-        return "❌ Ошибка перевода. Попробуйте позже."
+        logger.error(f"Unexpected translation error: {e}", exc_info=True)
+        return """❌ Неожиданная ошибка перевода
+
+Произошла непредвиденная ошибка.
+
+Пожалуйста, попробуйте позже или свяжитесь с администратором."""
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming messages and translate them."""
@@ -276,6 +334,15 @@ def main() -> None:
     if not token:
         logger.error("TELEGRAM_BOT_TOKEN not found in environment variables")
         return
+    
+    # Verify OpenAI API key is configured
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        logger.error("OPENAI_API_KEY not found in environment variables")
+        return
+    
+    logger.info("Configuration loaded successfully")
+    logger.info(f"OpenAI API Key configured: {api_key[:20]}...")
     
     # Create the Application
     application = Application.builder().token(token).build()
